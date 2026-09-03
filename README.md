@@ -23,7 +23,7 @@
      Aim for variety — sources that together cover different subtopics or perspectives. -->
 
 | # | Source | Type | URL or file path |
-|---|--------|------|-----------------|
+| - | ------ | ---- | ---------------- |
 | 1 | | | |
 | 2 | | | |
 | 3 | | | |
@@ -82,9 +82,9 @@
      Consider: context length limits, multilingual support, accuracy on domain-specific text,
      latency, and local vs. API-hosted. -->
 
-**Model used:**
+**Model used:** all-MiniLM-L6-v2 via sentence-transformers. It's small (~80MB), runs fully locally with no API key or rate limits, embeds in well under a second per chunk on CPU, and performs well on general English text like these tutorials — appropriate for a 10-source, 82-chunk corpus where latency and cost matter more than squeezing out marginal accuracy gains.
 
-**Production tradeoff reflection:**
+**Production tradeoff reflection:** If cost weren't a constraint, I'd consider a larger, higher-accuracy embedding model like OpenAI's text-embedding-3-large or Cohere's embed-v3 for better recall on nuanced domain-specific phrasing (e.g., distinguishing "front post double crochet" from "back post double crochet"). Tradeoffs I'd weigh: context length (less relevant here since my chunks are short, but would matter for longer documents), multilingual support (valuable if I wanted to include Spanish-language crochet tutorials, since terminology often differs meaningfully by region), accuracy on domain-specific text (a model with better recall on niche crafting vocabulary reduces the risk of confusing similar-sounding stitches), and latency (a larger, API-hosted model adds round-trip latency that matters more for a live chat interface than for one-time batch embedding). For a real product I'd benchmark a few candidates against my own eval questions rather than assume bigger is automatically better.
 
 ---
 
@@ -94,34 +94,39 @@
      For at least 2 of the 3, explain why the returned chunks are relevant to the query.
      Results must be text — not screenshots. -->
 
-**Query 1:**
+**Query 1:** "According to Amanda Crochets, what foundation chain length is required for the basket weave stitch?"
 
 Top returned chunks:
--
--
--
 
-Relevance explanation:
+- [Amanda Crochets: Handmade with Love] (distance=0.392) "To begin, you will need a multiple of 6 stitches plus 4 more at the end for your foundation chain. For the purposes of this tutorial, I am making 16 chains. ROW 1: Double crochet..."
+- [Heart. Hook. Home.] (distance=0.448) "Next you will single crochet in the second chain from the hook. Chain five, skip the next three chains, and single crochet in the next chain..."
+- [Amanda Crochets: Handmade with Love] (distance=0.453) "...ain. Chain 2 and turn. ROW 5: Repeat row 4. That's how to make the basket weave stitch! Repeat rows 2-5 over and over again to practice..."
+
+Relevance explanation: The top result directly answers the question with the exact expected fact ("multiple of 6 stitches plus 4 more") from the correct source, at a strong distance score (0.392). Results 2 and 3 are more loosely related (result 2 is a different tutorial's chain-counting instructions, pulled in because it shares similar foundation-chain language) but aren't off-topic noise — a top-k of 4 correctly surfaces the right answer first.
 
 ---
 
-**Query 2:**
+**Query 2:** "According to Stardust Crochet, what three techniques combine to make the coral mesh stitch?"
 
 Top returned chunks:
--
--
--
 
-Relevance explanation:
+- [Stardust Crochet: Inspire, Learn, Create] (distance=0.257) "a 5 mm hook. The Coral Mesh consists of a modified Solomon's knot, chains, and half double crochets. you may also like these stitch tutorials..."
+- [Stardust Crochet: Inspire, Learn, Create] (distance=0.379) "...Complete video tutorial at bottom of post — for all the visual learners out there. Do you have a stitch or pattern you'd like a video created?..."
+- [Heart. Hook. Home.] (distance=0.403) "...ttern. See the VIDEO tutorial for this stitch below! Note that one SHELL = double crochet, ch-1, double crochet, ch-1, double crochet all in the same stitch..."
+
+Relevance explanation: The top chunk is a near-perfect match — it names all three techniques (modified Solomon's knot, chains, half double crochets) from exactly the source asked about, at the lowest distance score of any query tested (0.257). This confirms the embedding model correctly associates "coral mesh," "techniques," and the specific stitch names even though the query doesn't quote the tutorial verbatim.
 
 ---
 
-**Query 3:**
+**Query 3:** "According to Hookfully's tutorial, how many incomplete stitches are worked into the same stitch to make one bobble, and how many loops are pulled through at the end?"
 
 Top returned chunks:
--
--
--
+
+- [Hookfully: Happy Crochet Family] (distance=0.298) "...Bobble stitch crochet tutorial. Making a bobble Stitch. Yarn over, insert hook & pull up a loop, yarn over, pull through 2 loops on the hook. Repeat 4 m..."
+- [Stardust Crochet: Inspire, Learn, Create] (distance=0.397) "...Stitch Guide: msol = modified Solomon's Knot. pull up a long loop (1/2" to 3/4"). yo, pull through. ch 1. hdc = half double crochet..."
+- [Hookfully: Happy Crochet Family] (distance=0.427) "...2 row repeat and to complete the tutorial you will need to know the single crochet, instructions are included to learn the bobble stitch..."
+
+Relevance explanation: The top chunk is from the correct source and contains the start of the exact instruction ("insert hook & pull up a loop, yarn over, pull through 2 loops... Repeat 4 m[ore times]"), which is the beginning of the answer but gets cut off at the 500-char chunk boundary before stating the final "pull through all 6 loops" step. This is a useful, realistic example of the chunk-boundary risk I flagged in planning.md's Anticipated Challenges — the answer is present but split across adjacent chunks, so the LLM would need at least 2 of the top-4 chunks to fully answer this question.
 
 Relevance explanation:
 
