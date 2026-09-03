@@ -63,12 +63,14 @@
      These must be actual text — not screenshots. -->
 
 | # | Source document | Chunk text |
-|---|----------------|------------|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
+| - | --------------- | ---------- |
+| 1 | argyle_shell_heart_hook_home | Reddit 8 Threads The Argyle Shell Stitch is gorgeous and lightweight. It is airy and perfect for summer tops and beach cover ups! Learn this beautiful crochet stitch set with this Argyle Shell tutorial! ChatGPT Google AI Claude Add as a Google source Argyle Shell Crochet Stitch Tutorial The Argyle Shell is perfect for lightweight yarns to make tops, tunics, or wraps, such as my NEW and FREE Shell Yeah! Tunic pattern. You will want to block your finished piece to really see the |
+| 2 | basket_weave_amanda_crochets | Share Pin 3K 3K Shares Hey everyone! In today's Crochet 101 lesson, I'm going to teach you how to make the basket weave stitch. This stitch is made working groups of front post double crochets and back post double crochets along the row. As you work more rows, you will begin to notice that some groups appear to be worked vertically while others horizontally. This effect happens by working different combinations of front and back post double crochets over four different rows. For today's |
+| 3 | bead_stitch_stardust_crochet | Facebook This weeks Stitch Explorers cover the Bead Stitch. The bead stitch creates beautiful puffs and is very similar to the pineapple and pineapple puff stitch. It combines two basic stitches, the single crochet and the double crochet, which makes it perfect for a beginner to learn! You can come back to this link and explore the rest of the stitches, there is so much to learn! This is the fourth of five stitches we are going to learn leading up to creating the coolest 5 stitch project |
+| 4 | blackberry_salad_handmade_by_stacy_j | The Blackberry Salad Crochet Stitch is a fun and simple crochet stitch that offers lots of texture! It works in increments of 4+1 and over a 4 row repeat. If you can chain and double crochet, YOU CAN DO THIS! There are written directions below for the Blackberry Salad Crochet Stitch, as well as a pin to save to your boards. The video tutorial is directly below. DIRECTIONS for the Blackberry Salad Crochet Stitch: Increments of 4+1 (+2 for the base chain) 1: Skip 3 chains (counts as dc), dc |
+| 5 | bobble_stitch_hookfully | Bobble Stitch Tutorial The bobble stitch tutorial will help you to crochet a 3D texture, just like little bubbles! Even though it's single sided, the reverse has a very interesting design too. The bobble stitch can be used for almost any crochet project and is defo one of my favourite special stitches! How to crochet the bobble stitch The bobble stitch crochet tutorial is easy to intermediate skill level. Its a 2 row repeat and to complete the tutorial you will need to know the single |
+
+**Inspection notes:** Chunks 4 and 5 are clean, complete instructional units that would make sense retrieved on their own. Chunks 1, 2, and 3 each open with leftover social-share widget text ("Reddit 8 Threads", "Share Pin 3K Shares", "Facebook") that survived HTML cleaning — different blog themes render share-button counts as plain text in slightly different formats, and our `clean_html()` regex in `ingest.py` only catches some of those variants. This is a known, un-fixed artifact at the time of this snapshot (documented honestly rather than hidden); the real instructional content directly after the noise is otherwise intact and retrievable. We plan to tighten the share-widget regex as a follow-up polish pass.
 
 ---
 
