@@ -9,10 +9,7 @@
 
 ## Domain
 
-<!-- What topic or category of knowledge does your system cover?
-     Why is this knowledge valuable, and why is it hard to find through official channels?
-     Example: "Student reviews of CS professors at [university] — useful because official
-     course descriptions don't reflect teaching style, exam difficulty, or workload." -->
+**Crochet stitches.** For any given stitch (shell, bobble, basket weave, coral mesh, etc.), dozens of independent hobbyist bloggers publish their own tutorial, each with slightly different wording, abbreviations (US vs. UK terms), stitch counts, and troubleshooting tips. There's no single official reference that consolidates this: pattern-writing bodies define standard abbreviations but don't cover technique nuance, variations, or common mistakes. A beginner searching "how do I do a bobble stitch" has to open 5–10 tabs, compare instructions, and reconcile conflicting terminology on their own — the knowledge that would answer their question exists, but it's scattered across low-SEO independent blogs with no cross-referencing. This system pulls together the specific fact or step a crocheter needs from across those sources without requiring them to manually read and compare multiple full tutorials.
 
 ---
 
@@ -24,16 +21,16 @@
 
 | # | Source | Type | URL or file path |
 | - | ------ | ---- | ---------------- |
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-| 4 | | | |
-| 5 | | | |
-| 6 | | | |
-| 7 | | | |
-| 8 | | | |
-| 9 | | | |
-| 10 | | | |
+| 1 | The Spruce Crafts — How to Crochet Shell Stitch | Blog tutorial (web) | [https://www.thesprucecrafts.com/how-to-crochet-a-shell-stitch-979096](https://www.thesprucecrafts.com/how-to-crochet-a-shell-stitch-979096) |
+| 2 | Heart. Hook. Home. — Argyle Shell Crochet Stitch Tutorial | Blog tutorial (web) | [https://hearthookhome.com/argyle-shell-crochet-stitch-tutorial/](https://hearthookhome.com/argyle-shell-crochet-stitch-tutorial/) |
+| 3 | Amanda Crochets: Handmade with Love — How to Make the Basket Weave Stitch | Blog tutorial (web) | [https://www.amandacrochets.com/how-to-make-the-basket-weave-stitch/](https://www.amandacrochets.com/how-to-make-the-basket-weave-stitch/) |
+| 4 | Hookfully: Happy Crochet Family — Bobble Stitch Tutorial | Blog tutorial (web) | [https://hookfully.com/bobble-stitch-tutorial/](https://hookfully.com/bobble-stitch-tutorial/) |
+| 5 | Handmade by Stacy J — Blackberry Salad Crochet Stitch | Blog tutorial (web) | [https://handmadebystacyj.com/2020/03/14/blackberry-salad-crochet-tutorial/](https://handmadebystacyj.com/2020/03/14/blackberry-salad-crochet-tutorial/) |
+| 6 | Creations by Courtney — Crochet Heart: Stitch Tutorial | Blog tutorial (web) | [https://creationsbycourtney.com/crochet-heart-stitch-tutorial/](https://creationsbycourtney.com/crochet-heart-stitch-tutorial/) |
+| 7 | Selina Veronique: Crochet-DIY-Lifestyle — Crochet Lacy Shell Stitch Free Pattern | Blog tutorial (web) | [https://www.selinaveronique.com/crochet-lacy-shell-stitch-free-pattern](https://www.selinaveronique.com/crochet-lacy-shell-stitch-free-pattern) |
+| 8 | Stardust Crochet — How to Crochet: Coral Mesh (Stitch Explorer Series) | Blog tutorial (web) | [https://stardustgoldcrochet.com/how-to-crochet-coral-mesh-crochet-video-tutorial-for-beginners-stitch-explorer-series/](https://stardustgoldcrochet.com/how-to-crochet-coral-mesh-crochet-video-tutorial-for-beginners-stitch-explorer-series/) |
+| 9 | Stardust Crochet — How to Crochet: Bead Stitch (Stitch Explorer Series) | Blog tutorial (web) | [https://stardustgoldcrochet.com/how-to-crochet-bead-stitch-video-tutorial-for-beginners-stitch-explorer-series/](https://stardustgoldcrochet.com/how-to-crochet-bead-stitch-video-tutorial-for-beginners-stitch-explorer-series/) |
+| 10 | Rich Textures Crochet — Mesh Cluster Stitch: How to Crochet | Blog tutorial (web) | [https://richtexturescrochet.com/mesh-cluster-stitch/](https://richtexturescrochet.com/mesh-cluster-stitch/) |
 
 ---
 
@@ -46,13 +43,15 @@
      - Any preprocessing you did before chunking (e.g., stripping HTML, removing headers)
      - What your final chunk count was across all documents -->
 
-**Chunk size:**
+**Chunk size:** ~500 characters (roughly 100–125 tokens), implemented in `chunk_text()` in `chunk.py`.
 
-**Overlap:**
+**Overlap:** 75 characters.
 
-**Why these choices fit your documents:**
+**Preprocessing before chunking:** Each source is fetched in `ingest.py`, parsed with BeautifulSoup, and narrowed to its actual article-body container (auto-detected as the largest of `<article>`, `elementor-widget-theme-post-content`, `entry-content`, or `post-content`, since some page-builder sites like Elementor put unrelated "related posts" teasers in `<article>` tags instead of the real content). `<script>`, `<style>`, `<nav>`, `<footer>`, and similar boilerplate tags are stripped, along with elements whose class/id matches comment/sidebar/related-post/advertisement/newsletter keywords, and a regex strips social-share button text (e.g. "11368 shares Tweet Reddit") that some themes render as plain text rather than a targetable CSS class. Each cleaned document is saved as a `.txt` file in `documents/` with a small header (source, description, URL) before chunking runs.
 
-**Final chunk count:**
+**Why these choices fit your documents:** My documents are blog-style tutorials, not short reviews — each page mixes an intro, a materials list, a numbered step-by-step instruction sequence, and troubleshooting tips, and a single tutorial can run 1,500–5,500+ characters. A chunk size much smaller than 500 characters would cut a single instructional step in half and make it unretrievable on its own; a chunk size much larger (e.g. a whole article as one chunk) would bury a specific fact inside a mass of unrelated prose and dilute the embedding, hurting retrieval precision. 500 characters keeps each chunk to roughly one instructional step or tip, matching how these tutorials are actually structured. The 75-character overlap protects against a step's setup (e.g. "insert hook into the next stitch, yarn over,") being separated from its conclusion ("...pull through and complete as normal") by a chunk boundary — with overlap, at least one of the two adjacent chunks is more likely to contain the full instruction, though as documented in Failure Case Analysis below, this doesn't eliminate the risk entirely.
+
+**Final chunk count:** 82 chunks across the 10 documents (verified by running `chunk_all_documents()` in `chunk.py`), which falls in the healthy 50–2,000 range — not so few that chunks are overly broad, not so many that each carries too little semantic signal to distinguish from noise.
 
 ---
 
@@ -128,8 +127,6 @@ Top returned chunks:
 
 Relevance explanation: The top chunk is from the correct source and contains the start of the exact instruction ("insert hook & pull up a loop, yarn over, pull through 2 loops... Repeat 4 m[ore times]"), which is the beginning of the answer but gets cut off at the 500-char chunk boundary before stating the final "pull through all 6 loops" step. This is a useful, realistic example of the chunk-boundary risk I flagged in planning.md's Anticipated Challenges — the answer is present but split across adjacent chunks, so the LLM would need at least 2 of the top-4 chunks to fully answer this question.
 
-Relevance explanation:
-
 ---
 
 ## Grounded Generation
@@ -141,9 +138,9 @@ Relevance explanation:
      Do not just say "I told it to use the documents" — show the actual instruction or explain
      the mechanism. -->
 
-**System prompt grounding instruction:**
+**System prompt grounding instruction:** From `generate.py`'s `SYSTEM_PROMPT`: "Answer the question using only the information in the provided documents below — never your own general knowledge of crochet... If the documents don't contain enough information to answer, say exactly: 'I don't have enough information on that.' Do not guess or fall back on outside knowledge... Do not add your own citations, footnote markers, or a source list... Source attribution is handled separately by the system after your answer is generated." The context passed to the model is strictly limited to the top-k retrieved chunks — the model is never given tool access, web access, or any other way to pull in outside information, so grounding is enforced both by instruction and by the structural fact that retrieved text is the only information available to it.
 
-**How source attribution is surfaced in the response:**
+**How source attribution is surfaced in the response:** Attribution is built programmatically, not left to the model. `_format_sources()` in `generate.py` reads the `source`, `description`, and `url` metadata directly off the chunks that ChromaDB actually returned for that query and de-duplicates them into a source list, which the Gradio interface (`app.py`) renders in a separate "Sources" panel below the answer — the model's answer text never determines what gets cited. As an extra safety net, `_strip_citation_markers()` regex-strips any inline citation-style text (e.g. `[Excerpt 1]`) the model adds despite being told not to, since a prompt instruction alone is not a guarantee — this was needed in practice: an earlier test run had the model insert a `【Excerpt 1 — Amanda Crochets】` marker into its answer on its own.
 
 ---
 
@@ -155,29 +152,35 @@ Relevance explanation:
 
 **Grounded response 1**
 
-Query:
+Query: "What three techniques combine to make the coral mesh stitch, according to Stardust Crochet?"
 
-Response:
+Response: "The coral mesh stitch is made by combining a modified Solomon's knot, chains, and half-double crochets."
 
-Source attribution:
+Source attribution: [Stardust Crochet: Inspire, Learn, Create — How to Crochet: Coral Mesh; Stitch Explorer Series](https://stardustgoldcrochet.com/how-to-crochet-coral-mesh-crochet-video-tutorial-for-beginners-stitch-explorer-series/)
+
+Grounding check: The top retrieved chunk (distance=0.257) reads verbatim "The Coral Mesh consists of a modified Solomon's knot, chains, and half double crochets" — the response is a direct, traceable restatement of retrieved text, not a paraphrase invented from general crochet knowledge. Passes the "could this have come from anywhere else?" test — no, this specific three-part technique list only exists in this one tutorial.
 
 ---
 
 **Grounded response 2**
 
-Query:
+Query: "According to Amanda Crochets, what foundation chain length is required for the basket weave stitch?"
 
-Response:
+Response: "Amanda Crochets says the basket-weave stitch starts with a foundation chain that must be a multiple of 6 stitches plus 4 extra stitches. In the tutorial she uses 16 chains as an example."
 
-Source attribution:
+Source attribution: [Amanda Crochets: Handmade with Love — How to Make the Basket Weave Stitch](https://www.amandacrochets.com/how-to-make-the-basket-weave-stitch/); [Heart. Hook. Home. — Argyle Shell Crochet Stitch Tutorial](https://hearthookhome.com/argyle-shell-crochet-stitch-tutorial/)
+
+Grounding check: The specific numbers ("multiple of 6 plus 4," "16 chains") match the retrieved Amanda Crochets chunk word-for-word ("a multiple of 6 stitches plus 4 more... I am making 16 chains"). This is a very specific, non-generic fact — a model relying on training data alone would have no way to know this particular blogger's specific example chain count, which confirms the answer is grounded rather than guessed. Note: a second, unrelated source (Heart. Hook. Home.) was also retrieved and listed in attribution even though the answer text doesn't draw from it — see Failure Case Analysis below for why over-inclusive attribution is a related but distinct risk from grounding failure.
 
 ---
 
 **Out-of-scope query**
 
-Query:
+Query: "What crochet hook size should I use for amigurumi?"
 
-System response (refusal):
+System response (refusal): "I don't have enough information on that."
+
+Grounding check: No source appears in the corpus that discusses amigurumi or general hook-sizing guidance, and the system's own attribution list came back empty for this query (retrieval still returned its top-4 nearest chunks, since ChromaDB always returns *something*, but the model correctly judged none of them relevant and refused rather than filling the gap with plausible-sounding general knowledge — e.g. it did NOT say something like "a 3.5mm hook is commonly recommended for amigurumi with worsted weight yarn," which would be true-sounding, common advice but entirely unsupported by this system's documents).
 
 ---
 
@@ -186,9 +189,9 @@ System response (refusal):
 <!-- Describe your query interface: what are the input fields, what does the output look like?
      Then provide a complete sample interaction transcript showing a real exchange. -->
 
-**Input fields:**
+**Input fields:** A single text box ("Ask about a crochet stitch") where the user types a natural-language question.
 
-**Output format:**
+**Output format:** Two output panels below the input: an "Answer" text box with the grounded response, and a "Sources" markdown panel listing each source document actually used (name, description, and URL), rendered as a bulleted list — or a note that no sources were used if the system refused to answer.
 
 ---
 
@@ -197,9 +200,14 @@ System response (refusal):
 <!-- Show a complete query → response exchange as it actually appears in your interface.
      Must be text — not a screenshot. -->
 
-> **User:** 
+> **User:** What three techniques combine to make the coral mesh stitch, according to Stardust Crochet?
 
-> **System:** 
+> **System:**
+> Answer: The coral mesh stitch is made by combining a modified Solomon's knot, chains, and half-double crochets.
+>
+> Sources:
+> - **Stardust Crochet: Inspire, Learn, Create** - How to Crochet: Coral Mesh; Stitch Explorer Series (https://stardustgoldcrochet.com/how-to-crochet-coral-mesh-crochet-video-tutorial-for-beginners-stitch-explorer-series/)
+> - **Heart. Hook. Home.** — Argyle Shell Crochet Stitch Tutorial (https://hearthookhome.com/argyle-shell-crochet-stitch-tutorial/)
 
 ---
 
@@ -211,11 +219,11 @@ System response (refusal):
 
 | # | Question | Expected answer | System response (summarized) | Retrieval quality | Response accuracy |
 |---|----------|-----------------|------------------------------|-------------------|-------------------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
+| 1 | According to Amanda Crochets, what foundation chain length is required for the basket weave stitch? | A multiple of 6 stitches plus 4 more (chain length = 6n + 4, e.g. 10, 16, 22, 28...) | "Amanda Crochets says the basket-weave stitch starts with a foundation chain that must be a multiple of 6 stitches plus 4 extra stitches—she uses 16 chains as her example." | Relevant | Accurate |
+| 2 | According to Hookfully's tutorial, how many incomplete stitches are worked into the same stitch to make one bobble, and how many loops are pulled through at the end? | 5 incomplete stitches, then pull through all 6 loops on the hook | "The tutorial works five incomplete stitches into the same stitch, then finishes by pulling all six loops on the hook through at the end." | Relevant | Accurate |
+| 3 | According to Creations by Courtney, what two stitch types form the foundation row of the crochet heart pattern, and what stitches make up the heart motif itself? | Foundation row: treble and chain stitches. Heart motif: treble, double crochet, and single crochet stitches plus a picot detail | "The foundation row is worked with treble stitches and chain stitches. The heart motif itself is made from single-crochet stitches and slip stitches." | Partially relevant | Partially accurate |
+| 4 | According to Stardust Crochet, what three techniques combine to make the coral mesh stitch? | A modified Solomon's knot, half double crochet, and chain stitches | "The coral mesh stitch is made by combining a modified Solomon's knot, chains, and half-double crochets." | Relevant | Accurate |
+| 5 | What is the "modified Solomon's knot" loop length recommended in Stardust Crochet's coral mesh tutorial? | A loop of 1/2" to 3/4" is pulled up before working the yarn over and chain 1 | "The tutorial advises pulling up a long loop that is about ½ inch to ¾ inch long." | Relevant | Accurate |
 
 **Retrieval quality:** Relevant / Partially relevant / Off-target  
 **Response accuracy:** Accurate / Partially accurate / Inaccurate
@@ -235,13 +243,13 @@ System response (refusal):
      "The embedding model treated the professor's nickname as out-of-vocabulary and returned
      results from an unrelated review" is an explanation. -->
 
-**Question that failed:**
+**Question that failed:** "According to Creations by Courtney, what two stitch types form the foundation row of the crochet heart pattern?"
 
-**What the system returned:**
+**What the system returned:** "According to Creations by Courtney, the foundation row is made of treble stitches and chain stitches." This sounds confident and specific, and both stitch types genuinely appear on that source's page — but when I inspected the actual retrieved chunks, none of the 4 top-k chunks contains a sentence that states "the foundation row is made of treble stitches and chain stitches." The closest chunk says "I chose to work the stitches into a treble stitch rather than chains, as chain stitches work great for creating a vertical row of hearts rather than a horizontal row" — which is discussing a design choice between two options, not describing the foundation row's composition. A second retrieved chunk lists "Ch(s): chain(s)... Tr: treble crochet" in a general abbreviation key, unconnected to "foundation row" specifically.
 
-**Root cause (tied to a specific pipeline stage):**
+**Root cause (tied to a specific pipeline stage):** This is a retrieval + chunking issue, not a pure generation issue. Two of the top-4 retrieved chunks (Heart. Hook. Home. results) were about a completely unrelated stitch (Argyle Shell), diluting the context with off-topic material. Of the two Creations by Courtney chunks that were relevant, neither one contains the specific "foundation row" fact in one place — the actual answer likely lives in a chunk that wasn't retrieved, or is split by our 500-char chunking so the "foundation row" description and the treble/chain stitch names never appear together in a single chunk. The model then plausibly stitched together "treble" and "chain" from two nearby but disconnected chunk fragments into an answer that reads as one coherent fact, which is a subtle grounding failure: technically every word it used appears somewhere in the retrieved context, but the specific claim as stated isn't a direct restatement of any one passage — it's an inference across fragments, which is exactly the kind of response that "sounds authoritative but didn't strictly come from the retrieved text."
 
-**What you would change to fix it:**
+**What I would change to fix it:** (1) Increase chunk overlap or chunk size for pages with structural/procedural detail like this one, so a fact like "foundation row = X + Y" is less likely to be split across chunk boundaries. (2) Tighten the system prompt to explicitly forbid synthesizing a claim by combining facts from multiple non-adjacent chunks unless the combination is stated directly in at least one chunk — e.g., "only state a fact if it is explicitly present in a single excerpt; do not infer relationships between separate excerpts." (3) Consider a stricter distance-score cutoff so the two off-topic Heart. Hook. Home. chunks (which shouldn't have been within top-4 for a heart-pattern-specific query) don't get passed to the model as context at all.
 
 ---
 
@@ -250,9 +258,9 @@ System response (refusal):
 <!-- Reflect on how planning.md shaped your implementation.
      Answer both questions with at least 2–3 sentences each. -->
 
-**One way the spec helped you during implementation:**
+**One way the spec helped you during implementation:** Having the exact chunk size (500 characters) and overlap (75 characters) numbers pinned down in planning.md before writing any code meant `chunk_text()` in `chunk.py` had a concrete, testable target instead of a vague "chunk it reasonably" goal — when I ran `chunk.py` and inspected the sample chunks, I could directly check whether real chunks matched the reasoning I'd already written down (one instructional step per chunk), rather than discovering after the fact that my chunking logic didn't match my own justification. It also made prompting the AI tool for the chunking implementation much more precise, since I could hand it exact numbers instead of asking it to guess reasonable defaults.
 
-**One way your implementation diverged from the spec, and why:**
+**One way your implementation diverged from the spec, and why:** planning.md's Retrieval Approach section specified `all-MiniLM-L6-v2` and top-k=4, which I implemented as written and did not change. Where I did diverge from the original plan was the generation model: planning.md and the assignment instructions both pointed to specific Groq models (initially I tried `llama-3.3-70b-versatile`, then the assignment's recommended `meta-llama/llama-4-scout-17b-16e-instruct`), but neither was available on my Groq account when I checked with `client.models.list()`. I substituted `openai/gpt-oss-120b`, which is available on my key and, like the recommended models, is served through Groq's OpenAI-compatible chat completions endpoint, so no other part of the pipeline needed to change. I documented this substitution directly in a code comment in `generate.py` rather than silently swapping it, since a grader or future me re-running this project might hit the same unavailable-model error.
 
 ---
 
@@ -269,12 +277,12 @@ System response (refusal):
 
 **Instance 1**
 
-- *What I gave the AI:*
-- *What it produced:*
-- *What I changed or overrode:*
+- *What I gave the AI:* My planning.md Documents table (10 source URLs) and Chunking Strategy section (500-char chunks, 75-char overlap, and my reasoning about instructional steps), and asked it to implement `ingest.py` (scrape + clean each URL into plain text) and `chunk.py` (`chunk_text()` matching my exact spec).
+- *What it produced:* A working scraper using `requests` + BeautifulSoup with a generic "strip noise by CSS class/id keyword" cleaning step, and a chunker that split text into 500-char windows with 75-char overlap on word boundaries.
+- *What I changed or overrode:* The first version of `clean_html()` was too aggressive — a generic "sidebar" keyword matched an unrelated Neve-theme layout class (`nv-sidebar-right`) and deleted entire article bodies, and the generic "widget" keyword matched Elementor's own content-wrapper class (`elementor-widget-container`) on another site, reducing several documents to a few dozen characters of just the page title. I diagnosed this by inspecting raw HTML and intermediate soup output per-site, then rewrote the cleaning logic to scope noise-removal to inside the already-identified content root (instead of the whole page) and dropped the overly generic "widget"/"share" keywords in favor of more specific ones. I verified the fix by re-running ingestion and confirming all 10 documents came back with substantial (1,600–5,500 char) content instead of near-empty stubs.
 
 **Instance 2**
 
-- *What I gave the AI:*
-- *What it produced:*
-- *What I changed or overrode:*
+- *What I gave the AI:* My planning.md Retrieval Approach section (all-MiniLM-L6-v2, top-k=4, ChromaDB) and the assignment's suggested prompt template and Gradio skeleton, and asked it to implement `embed.py` (embedding + ChromaDB storage + `retrieve()`), `generate.py` (grounded generation with programmatic source attribution), `query.py` (an `ask()` entry point), and `app.py` (the Gradio UI).
+- *What it produced:* A working embed/retrieve pipeline, a `generate_answer()` function with a grounding system prompt initially targeting `llama-3.3-70b-versatile`, and a Gradio `Interface`.
+- *What I changed or overrode:* (1) The initial generation model didn't exist on my Groq key (404 error), so I had the AI list available models via `client.models.list()` and substitute `openai/gpt-oss-120b`. (2) During grounding tests, the model inserted an inline citation marker (`【Excerpt 1 — Amanda Crochets】`) into its answer text despite the system prompt telling it not to — I had the AI add a regex-based `_strip_citation_markers()` safety net rather than trusting the prompt instruction alone, since "instructed not to" and "structurally cannot" are different guarantees. (3) I rebuilt the Gradio interface from the initial `gr.Interface` version to a `gr.Blocks` version with a submit button and Enter-to-submit, matching the assignment's suggested code pattern more closely, and split source attribution into its own output field rather than combining it into the answer text.
