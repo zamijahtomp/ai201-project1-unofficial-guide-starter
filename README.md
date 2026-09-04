@@ -1,5 +1,11 @@
 # The Unofficial Guide — Project 1
 
+## Demo Video
+
+[Crochet Stitch Guide with Source Grounding (Loom, with captions)](https://www.loom.com/share/f38e2dff7b8c45d68cb5ce863429e183)
+
+---
+
 > **How to use this template:**
 > Complete each section *after* you've built and tested the corresponding part of your system.
 > Do not write placeholder text — if a section isn't done yet, leave it blank and come back.
